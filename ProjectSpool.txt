@@ -1,0 +1,308 @@
+SQL> start create_tables
+
+Table created.
+
+
+Table created.
+
+
+Table created.
+
+
+Table created.
+
+
+Table created.
+
+SQL> start insert_data
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+
+1 row created.
+
+SQL> start create_orders
+
+PL/SQL procedure successfully completed.
+
+No errors.
+SQL> SELECT * FROM Customer;
+
+CUSTI NAME                           EMAIL                                      
+----- ------------------------------ ------------------------------             
+ADDRESS                                            CUSTTYP DATEJOINE            
+-------------------------------------------------- ------- ---------            
+a0001 Kathleen Casey                 kmcasey11@gmail.com                        
+1461 Creekside Dr., Walnut Creek, CA               Regular                      
+                                                                                
+b1234 Mary Sue                       msue21@gmail.com                           
+541 Mountain Rd., Draper, UT                       Regular                      
+                                                                                
+c9876 Chip and Joanna Gains          cjgains99@gmail.com                        
+75 Old Town Rd., Fort Worth, TX                    Regular                      
+                                                                                
+
+CUSTI NAME                           EMAIL                                      
+----- ------------------------------ ------------------------------             
+ADDRESS                                            CUSTTYP DATEJOINE            
+-------------------------------------------------- ------- ---------            
+d1209 Sam Rietz                      srietz@scu.edu                             
+1461 Creekside Dr., Walnut Creek, CA               Gold    07-JAN-97            
+                                                                                
+excel Stan Lee                       slee@gmail.com                             
+74 High Life Dr., Syracuse, NY                     Gold    16-FEB-21            
+                                                                                
+
+SQL> SELECT * FROM StoreItems;
+
+ITEMI ITEMT      PRICE                                                          
+----- ----- ----------                                                          
+b0000 comic      10.99                                                          
+s0000 shirt      25.55                                                          
+b1111 comic      12.99                                                          
+b2222 comic      13.55                                                          
+s1212 shirt       35.5                                                          
+b9066 comic       26.9                                                          
+
+6 rows selected.
+
+SQL> SELECT * FROM ComicBook;
+
+ITEMI ISBN          TITLE                                              PUBLISHED
+----- ------------- -------------------------------------------------- ---------
+NUM_OF_COPIES                                                                   
+-------------                                                                   
+b0000 19-41-7859-90 Raiders of the Found Ark                           12-APR-66
+           55                                                                   
+                                                                                
+b1111 18-4111-89-01 Luke Strikes Back                                  16-JUL-69
+           10                                                                   
+                                                                                
+b2222 851-1-21-0-40 Fly You Fools                                      28-SEP-01
+           18                                                                   
+                                                                                
+
+ITEMI ISBN          TITLE                                              PUBLISHED
+----- ------------- -------------------------------------------------- ---------
+NUM_OF_COPIES                                                                   
+-------------                                                                   
+b9066 463-452-110-9 Singing In the Rain                                12-JUN-12
+           80                                                                   
+                                                                                
+
+SQL> SELECT * FROM Tshirt;
+
+ITEMI SHIRT_SIZE  NUM_IN_INVENTORY                                              
+----- ----------- ----------------                                              
+s0000 M                         12                                              
+s1212 XS                         3                                              
+s1212 M                         12                                              
+
+SQL> SELECT * FROM ItemOrders;
+
+ORDER CUSTI ITEMI DATE_OF_O NUM_OF_ITEMS SHIPPED_D SHIPPINGFEE                  
+----- ----- ----- --------- ------------ --------- -----------                  
+00001 d1209 b1111 12-MAR-21            2                     0                  
+00002 a0001 b0000 12-MAR-21            1                    10                  
+00003 a0001 s1212 12-MAR-21            1                    10                  
+00004 c9876 s1212 12-MAR-21            1                    10                  
+
+SQL> -- Customer 'excel' tries to buy 12 copies of ComicBook 'b1111' (There are currently only 10 in stock)
+SQL> exec addItemOrder('00005','excel','b1111','ComicBook','12-Mar-2021',12,NULL,NULL);
+BEGIN addItemOrder('00005','excel','b1111','ComicBook','12-Mar-2021',12,NULL,NULL); END;
+
+*
+ERROR at line 1:
+ORA-20000: # of items ordered exceeds inventory 
+ORA-06512: at "SRIETZ.ADDITEMORDER", line 12 
+ORA-06512: at line 1 
+
+
+SQL> -- Constraint successfuly enforced
+SQL> -- This time customer 'excel' will just buy 1 copy
+SQL> exec addItemOrder('00005','excel','b1111','ComicBook','12-Mar-2021',1,NULL,NULL);
+
+PL/SQL procedure successfully completed.
+
+SQL> -- Let's make sure the # of items in the inventory was adjusted (There were 10)
+SQL> select * from ComicBook;
+
+ITEMI ISBN          TITLE                                              PUBLISHED
+----- ------------- -------------------------------------------------- ---------
+NUM_OF_COPIES                                                                   
+-------------                                                                   
+b0000 19-41-7859-90 Raiders of the Found Ark                           12-APR-66
+           55                                                                   
+                                                                                
+b1111 18-4111-89-01 Luke Strikes Back                                  16-JUL-69
+            9                                                                   
+                                                                                
+b2222 851-1-21-0-40 Fly You Fools                                      28-SEP-01
+           18                                                                   
+                                                                                
+
+ITEMI ISBN          TITLE                                              PUBLISHED
+----- ------------- -------------------------------------------------- ---------
+NUM_OF_COPIES                                                                   
+-------------                                                                   
+b9066 463-452-110-9 Singing In the Rain                                12-JUN-12
+           80                                                                   
+                                                                                
+
+SQL> -- Success! There are now 9 copies of item
+SQL> -- 'b1111' in the inventory
+SQL> START custTypeChange_trig
+
+Trigger created.
+
+No errors.
+SQL> 
+SQL> --Customer 'a0001' just upgraded to 'Gold' status
+SQL> UPDATE Customer SET custType = 'Gold' WHERE custId = 'a0001';
+
+1 row updated.
+
+SQL> -- our trigger should have updated the shipping fee for their order
+SQL> SELECT * FROM ItemOrders;
+
+ORDER CUSTI ITEMI DATE_OF_O NUM_OF_ITEMS SHIPPED_D SHIPPINGFEE                  
+----- ----- ----- --------- ------------ --------- -----------                  
+00001 d1209 b1111 12-MAR-21            2                     0                  
+00002 a0001 b0000 12-MAR-21            1                     0                  
+00003 a0001 s1212 12-MAR-21            1                     0                  
+00004 c9876 s1212 12-MAR-21            1                    10                  
+00005 excel b1111 12-MAR-21            1                     0                  
+
+SQL> -- My (custId 'd1209') order is set to be shipped
+SQL> exec setShippingDate('00001','16-Mar-2021');
+
+PL/SQL procedure successfully completed.
+
+SQL> SELECT * FROM ItemOrders;
+
+ORDER CUSTI ITEMI DATE_OF_O NUM_OF_ITEMS SHIPPED_D SHIPPINGFEE                  
+----- ----- ----- --------- ------------ --------- -----------                  
+00001 d1209 b1111 12-MAR-21            2 16-MAR-21           0                  
+00002 a0001 b0000 12-MAR-21            1                     0                  
+00003 a0001 s1212 12-MAR-21            1                     0                  
+00004 c9876 s1212 12-MAR-21            1                    10                  
+00005 excel b1111 12-MAR-21            1                     0 
+
+SQL> -- lets compute the total for my Order '00001'
+SQL> -- NOTE: I bought 2 copies of comic 'b1111' each priced at 12.99 and I am a Gold member
+SQL> -- Because I have modified my computeTotal procedure to also output certain values, I have created a helper .sql file to execute it
+SQL> exec testComputeTotal('00001');
+OrderId: 00001
+Tax(in percent): 5
+Shiping Fee: 0
+Discount(In percent):          
+10
+Subtotal(Before Discount): 25.98
+Total: 27.279                               
+
+PL/SQL procedure successfully completed.
+
+SQL> -- Now let's see the details of all the current ItemOrders
+SQL> -- for customer 'a00001'
+SQL> exec showItemOrders('a0001','10-Mar-2021');
+
+----Customer Info----                                                          
+CustomerId: a0001
+Name: Kathleen Casey
+Customer Type: Gold
+Contact Info:        
+kmcasey11@gmail.com
+Address: 1461 Creekside Dr., Walnut Creek, CA
+              
+
+----Information regarding Orders Placed----
+                                   
+** Order: 00002 **                                                              
+OrderId: 00002
+ItemId: b0000
+Title: Raiders of the Found Ark
+Price:             
+10.99
+Quantity: 1
+Date Ordered: 12-MAR-21
+Date Shipped: 
+                       
+Payment Details of Item: 00002
+Subtotal For Item 00002 Before Tax, Shipping, and
+Discounts: 10.99
+Tax: 5
+Shipping Fee: 0
+Total After Tax, Shipping and Discounts:
+11.54
+                                                                          
+** Order: 00003 **                                                              
+OrderId: 00003
+ItemId: s1212
+Title: *Item Exception! Not a comic book*
+Price:   
+35.5
+Quantity: 1
+Date Ordered: 12-MAR-21
+Date Shipped: 
+                        
+Payment Details of Item: 00003
+Subtotal For Item 00003 Before Tax, Shipping, and
+Discounts: 35.5
+Tax: 5
+Shipping Fee: 0
+Total After Tax, Shipping and Discounts: 
+37.28
+                                                                          
+=> Grand Total: 48.82                                                           
+
+PL/SQL procedure successfully completed.
+
+SQL> spool off;
